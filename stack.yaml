@@ -1,0 +1,12 @@
+resolver: lts-13.21
+
+packages:
+  - .
+  - ../numhask/numhask-space
+  - ../numhask/numhask
+  - ../numhask/numhask-prelude
+
+extra-deps:
+  - tdigest-0.2
+
+allow-newer: true
