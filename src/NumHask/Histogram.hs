@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wall #-}
 
 module NumHask.Histogram
@@ -15,14 +14,13 @@ module NumHask.Histogram
   , freq
   ) where
 
+import Prelude
 import Data.TDigest
-import NumHask.Prelude
--- import NumHask.Data.Range
-import NumHask.Data.Rect
--- import NumHask.Analysis.Space
+import NumHask.Space
 import qualified Data.Map as Map
 import qualified Control.Foldl as L
 import qualified Data.List
+import Data.Maybe
 
 -- | a Histogram is a list of contiguous boundaries (a boundary being the lower edge of one bucket and the upper edge of another), and a count for each bucket
 -- Overs and Unders are counted in key=0 and key=length cut
@@ -43,8 +41,8 @@ fill cs xs = Histogram cs (histMap cs xs)
     histMap cs' xs' = L.fold count $
         (\x -> L.fold countBool (fmap (x >) cs')) <$> xs'
     count = L.premap (\x -> (x,1.0)) countW
-    countBool = L.Fold (\x a -> x + if a then 1 else 0) 0 identity
-    countW = L.Fold (\x (a,w) -> Map.insertWith (+) a w x) Map.empty identity
+    countBool = L.Fold (\x a -> x + if a then 1 else 0) 0 id
+    countW = L.Fold (\x (a,w) -> Map.insertWith (+) a w x) Map.empty id
 
 -- | make a histogram using n equally spaced cuts over the entire range of the data
 -- >>> regular 4 [0..100]
@@ -97,7 +95,7 @@ quantileFold qs = L.Fold step begin done
   where
     step x a = Data.TDigest.insert a x
     begin = tdigest ([] :: [Double]) :: TDigest 25
-    done x = fromMaybe nan . (`quantile` compress x) <$> qs
+    done x = fromMaybe (0/0) . (`quantile` compress x) <$> qs
 
 -- | take a specification of quantiles and make a Histogram
 -- >>> fromQuantiles [0,0.25,0.5,0.75,1] (regularQuantiles 4 [0..100])
